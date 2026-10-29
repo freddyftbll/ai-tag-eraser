@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>AI Tag Eraser — Strip Video Metadata</title>
+  <style>
+    :root {
+      --bg: #0f0f13; --card: #1a1a24; --card2: #22222e;
+      --accent: #7c5cfc; --accent2: #a78bfa;
+      --green: #34d399; --red: #f87171; --yellow: #fbbf24;
+      --text: #e5e7eb; --muted: #9ca3af; --border: #2d2d3d; --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100dvh; padding: 16px; display: flex; flex-direction: column; align-items: center; }
+    header { width: 100%; max-width: 560px; text-align: center; padding: 28px 0 20px; }
+    .logo { font-size: 2.2rem; margin-bottom: 6px; }
+    h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #7c5cfc, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .subtitle { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
+    .badge-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .badge { background: var(--card2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: var(--muted); }
+    .badge.green { color: var(--green); border-color: #065f46; }
+    .badge.purple { color: var(--accent2); border-color: #4c1d95; }
+    main { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 16px; }
+    .dropzone { border: 2px dashed var(--border); border-radius: var(--radius); background: var(--card); padding: 40px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
+    .dropzone.drag-over { border-color: var(--accent); background: #1e1838; }
+    .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .dropzone .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .dropzone .hint { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+    .dropzone .pick-btn { display: inline-block; margin-top: 14px; padding: 10px 24px; background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.9rem; font-weight: 600; pointer-events: none; }
+    .file-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: none; }
+    .file-card.visible { display: block; }
+    .file-info { display: flex; align-items: center; gap: 12px; }
+    .file-icon { font-size: 2rem; flex-shrink: 0; }
+    .file-details { flex: 1; min-width: 0; }
+    .file-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-size { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+    .clear-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.8rem; }
+    .status-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: none; }
+    .status-card.visible { display: block; }
+    .status-header { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .log { font-family: "SF Mono","Fira Code","Courier New",monospace; font-size: 0.78rem; color: #7dd3fc; background: #0c0c14; border-radius: 10px; padding: 12px; max-height: 120px; overflow-y: auto; line-height: 1.6; }
+    .progress-bar { height: 6px; background: var(--card2); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.3s ease; }
+    .meta-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: none; }
+    .meta-card.visible { display: block; }
+    .meta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .meta-title { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .tag-count { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+    .tag-count.has-tags { background: #7f1d1d; color: var(--red); }
+    .tag-count.no-tags { background: #064e3b; color: var(--green); }
+    .meta-table { font-size: 0.8rem; width: 100%; border-collapse: collapse; }
+    .meta-table tr + tr td { border-top: 1px solid var(--border); }
+    .meta-table td { padding: 7px 8px; vertical-align: top; }
+    .meta-table td:first-child { color: var(--muted); white-space: nowrap; width: 40%; font-family: "SF Mono",monospace; font-size: 0.75rem; }
+    .meta-table td:last-child { color: var(--text); word-break: break-all; }
+    .no-meta-msg { text-align: center; color: var(--green); padding: 16px 0 8px; font-size: 0.9rem; }
+    .action-row { display: flex; gap: 10px; }
+    .btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #6d28d9); color: #fff; }
+    .btn-secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+    .result-card { background: #0d2818; border: 1px solid #065f46; border-radius: var(--radius); padding: 20px; text-align: center; display: none; }
+    .result-card.visible { display: block; }
+    .result-card .icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .result-card h3 { color: var(--green); font-size: 1.1rem; margin-bottom: 4px; }
+    .result-card p { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+    .download-btn { display: inline-block; padding: 12px 28px; background: var(--green); color: #000; border-radius: 50px; font-weight: 700; font-size: 0.95rem; text-decoration: none; cursor: pointer; }
+    .privacy-note { text-align: center; color: var(--muted); font-size: 0.75rem; margin-top: 8px; padding: 0 8px; }
+    .privacy-note span { color: var(--green); }
+    footer { width: 100%; max-width: 560px; text-align: center; padding: 24px 0 12px; color: var(--muted); font-size: 0.75rem; }
+    .loader-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; }
+    .loader-overlay.hidden { display: none; }
+    .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="spinner"></div>
+  <div class="loader-text">Loading video engine…</div>
+</div>
+<header>
+  <div class="logo">🧹</div>
+  <h1>AI Tag Eraser</h1>
+  <p class="subtitle">Strip all metadata &amp; AI provenance tags from videos</p>
+  <div class="badge-row">
+    <span class="badge green">✓ 100% Private</span>
+    <span class="badge green">✓ No Upload</span>
+    <span class="badge purple">✓ Free Forever</span>
+  </div>
+</header>
+<main>
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept="video/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.ts,.mts" />
+    <div class="icon">🎬</div>
+    <div>Tap to choose a video</div>
+    <div class="hint">MP4, MOV, AVI, MKV, WebM · Runs locally on your device</div>
+    <div class="pick-btn">Pick Video</div>
+  </div>
+  <div class="file-card" id="fileCard">
+    <div class="file-info">
+      <div class="file-icon">🎞️</div>
+      <div class="file-details">
+        <div class="file-name" id="fileName">—</div>
+        <div class="file-size" id="fileSize">—</div>
+      </div>
+      <button class="clear-btn" id="clearBtn">✕ Clear</button>
+    </div>
+  </div>
+  <div class="action-row" id="actionRow" style="display:none">
+    <button class="btn btn-secondary" id="scanBtn">🔍 Scan Tags</button>
+    <button class="btn btn-primary" id="stripBtn">🗑️ Strip &amp; Save</button>
+  </div>
+  <div class="meta-card" id="metaCard">
+    <div class="meta-header">
+      <span class="meta-title">Detected Metadata</span>
+      <span class="tag-count" id="tagCount">0 tags</span>
+    </div>
+    <div id="metaContent"></div>
+  </div>
+  <div class="status-card" id="statusCard">
+    <div class="status-header">Processing</div>
+    <div class="log" id="logBox"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+  <div class="result-card" id="resultCard">
+    <div class="icon">✅</div>
+    <h3>All done!</h3>
+    <p id="resultMsg">Metadata stripped successfully. Your video is clean.</p>
+    <a id="downloadLink" class="download-btn">⬇️ Download Clean Video</a>
+  </div>
+  <p class="privacy-note">
+    <span>🔒 Fully private</span> — your video never leaves your device.<br>
+    Processing happens in your browser using WebAssembly.
+  </p>
+</main>
+<footer>AI Tag Eraser · Strips C2PA, XMP, EXIF, and all video metadata · Free &amp; open</footer>
+<script type="module">
+  import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
+  import { fetchFile, toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
+
+  const loaderOverlay = document.getElementById('loaderOverlay');
+  const dropzone      = document.getElementById('dropzone');
+  const fileInput     = document.getElementById('fileInput');
+  const fileCard      = document.getElementById('fileCard');
+  const fileName      = document.getElementById('fileName');
+  const fileSize      = document.getElementById('fileSize');
+  const clearBtn      = document.getElementById('clearBtn');
+  const actionRow     = document.getElementById('actionRow');
+  const scanBtn       = document.getElementById('scanBtn');
+  const stripBtn      = document.getElementById('stripBtn');
+  const metaCard      = document.getElementById('metaCard');
+  const metaContent   = document.getElementById('metaContent');
+  const tagCount      = document.getElementById('tagCount');
+  const statusCard    = document.getElementById('statusCard');
+  const logBox        = document.getElementById('logBox');
+  const progressFill  = document.getElementById('progressFill');
+  const resultCard    = document.getElementById('resultCard');
+  const resultMsg     = document.getElementById('resultMsg');
+  const downloadLink  = document.getElementById('downloadLink');
+
+  let ffmpeg = null;
+  let selectedFile = null;
+  let outputUrl = null;
+
+  async function loadFFmpeg() {
+    ffmpeg = new FFmpeg();
+    ffmpeg.on('log', ({ message }) => appendLog(message));
+    ffmpeg.on('progress', ({ progress }) => {
+      progressFill.style.width = (Math.min(progress, 1) * 100) + '%';
+    });
+    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+    try {
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`,   'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+      });
+      loaderOverlay.classList.add('hidden');
+    } catch (e) {
+      loaderOverlay.innerHTML = `<div style="color:#f87171;text-align:center;padding:24px"><div style="font-size:2rem;margin-bottom:8px">⚠️</div><div>Failed to load video engine.</div><div style="font-size:0.8rem;margin-top:6px;color:#9ca3af">Check your internet connection and reload.<br>${e.message}</div><button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#7c5cfc;color:#fff;border:none;border-radius:50px;font-size:1rem;cursor:pointer">Reload</button></div>`;
+    }
+  }
+
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  function appendLog(msg) {
+    const line = document.createElement('div');
+    line.textContent = msg;
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function setButtons(disabled) {
+    scanBtn.disabled  = disabled;
+    stripBtn.disabled = disabled;
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    selectedFile = file;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatBytes(file.size);
+    fileCard.classList.add('visible');
+    actionRow.style.display = 'flex';
+    metaCard.classList.remove('visible');
+    statusCard.classList.remove('visible');
+    resultCard.classList.remove('visible');
+    if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
+  }
+
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    selectedFile = null; fileInput.value = '';
+    fileCard.classList.remove('visible'); actionRow.style.display = 'none';
+    metaCard.classList.remove('visible'); statusCard.classList.remove('visible');
+    resultCard.classList.remove('visible');
+    if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
+  });
+
+  scanBtn.addEventListener('click', async () => {
+    if (!selectedFile || !ffmpeg) return;
+    setButtons(true); logBox.innerHTML = '';
+    statusCard.classList.add('visible'); metaCard.classList.remove('visible');
+    resultCard.classList.remove('visible'); progressFill.style.width = '20%';
+    const ext = selectedFile.name.split('.').pop().toLowerCase() || 'mp4';
+    const inName = `input.${ext}`;
+    try {
+      await ffmpeg.writeFile(inName, await fetchFile(selectedFile));
+      progressFill.style.width = '60%';
+      const logs = [];
+      const capture = ({ message }) => logs.push(message);
+      ffmpeg.on('log', capture);
+      try { await ffmpeg.exec(['-i', inName, '-f', 'null', '-']); } catch(_) {}
+      ffmpeg.off('log', capture);
+      progressFill.style.width = '100%';
+      const fullLog = logs.join('\n');
+      const metaTags = {};
+      const metaSection = fullLog.match(/Metadata:\n([\s\S]*?)(?=Duration:|$)/);
+      if (metaSection) {
+        const metaRegex = /^\s{4}(\w[\w\s.-]*?)\s*:\s*(.+)$/gm;
+        let match;
+        while ((match = metaRegex.exec(metaSection[1])) !== null) {
+          metaTags[match[1].trim()] = match[2].trim();
+        }
+      }
+      await ffmpeg.deleteFile(inName);
+      renderMeta(metaTags);
+    } catch (e) { appendLog('Error: ' + e.message); }
+    finally { setButtons(false); progressFill.style.width = '100%'; }
+  });
+
+  function renderMeta(tags) {
+    const keys = Object.keys(tags);
+    metaCard.classList.add('visible');
+    if (keys.length === 0) {
+      tagCount.textContent = 'No tags found'; tagCount.className = 'tag-count no-tags';
+      metaContent.innerHTML = '<div class="no-meta-msg">🎉 No metadata detected — this video looks clean!</div>';
+      return;
+    }
+    tagCount.textContent = keys.length + (keys.length === 1 ? ' tag' : ' tags');
+    tagCount.className = 'tag-count has-tags';
+    const table = document.createElement('table');
+    table.className = 'meta-table';
+    for (const [k, v] of Object.entries(tags)) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${k}</td><td>${v}</td>`;
+      table.appendChild(tr);
+    }
+    metaContent.innerHTML = ''; metaContent.appendChild(table);
+  }
+
+  stripBtn.addEventListener('click', async () => {
+    if (!selectedFile || !ffmpeg) return;
+    setButtons(true); logBox.innerHTML = '';
+    statusCard.classList.add('visible'); resultCard.classList.remove('visible');
+    progressFill.style.width = '0%';
+    const ext = selectedFile.name.split('.').pop().toLowerCase() || 'mp4';
+    const inName  = `input.${ext}`;
+    const outName = `clean.${ext}`;
+    try {
+      appendLog('Writing file to memory…');
+      await ffmpeg.writeFile(inName, await fetchFile(selectedFile));
+      progressFill.style.width = '20%';
+      appendLog('Stripping all metadata…');
+      await ffmpeg.exec(['-i', inName, '-map_metadata', '-1', '-map_chapters', '-1', '-c', 'copy', '-movflags', '+faststart', outName]);
+      appendLog('Reading output…');
+      const data = await ffmpeg.readFile(outName);
+      progressFill.style.width = '100%';
+      const mime = selectedFile.type || 'video/mp4';
+      const blob = new Blob([data.buffer], { type: mime });
+      if (outputUrl) URL.revokeObjectURL(outputUrl);
+      outputUrl = URL.createObjectURL(blob);
+      const cleanName = selectedFile.name.replace(/(\.\w+)$/, '_clean$1');
+      downloadLink.href = outputUrl; downloadLink.download = cleanName;
+      resultMsg.textContent = `Stripped ${formatBytes(selectedFile.size - blob.size)} of metadata. Clean file: ${formatBytes(blob.size)}`;
+      resultCard.classList.add('visible');
+      appendLog('Done! ✓');
+      await ffmpeg.deleteFile(inName);
+      await ffmpeg.deleteFile(outName);
+    } catch (e) { appendLog('Error: ' + e.message); alert('Something went wrong: ' + e.message); }
+    finally { setButtons(false); }
+  });
+
+  loadFFmpeg();
+</script>
+</body>
+</html>
