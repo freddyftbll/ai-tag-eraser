@@ -220,17 +220,43 @@ function deepScan(buf, start, end, path, results) {
 
     // ── uuid boxes ────────────────────────────────────────────────────────
     if (b.type === 'uuid' && b.size >= 24) {
-      const uuid = Array.from({length:16},(_,i)=>view.getUint8(b.o+b.hl+i).toString(16).padStart(2,'0')).join('');
-      const label = KNOWN_UUID[uuid] || Object.entries(KNOWN_UUID).find(([k])=>uuid.startsWith(k.substring(0,16)))?.[1] || 'UUID Extension';
-      // Try to peek at content
-      let preview = '';
-      if (b.size > 32) {
-        const raw = decodeText(buf, b.o+b.hl+16, Math.min(200, b.size-b.hl-16));
-        if (raw.includes('<?x') || raw.includes('<x:xmp') || raw.includes('xmp:')) preview = 'XMP content';
-        else if (raw.includes('c2pa') || raw.includes('C2PA') || raw.includes('jumbf')) preview = 'C2PA manifest';
-        else if (raw.length > 2) preview = raw.substring(0,60);
+      // Read 16-byte UUID
+      const uuidArr = Array.from({length:16},(_,i)=>view.getUint8(b.o+b.hl+i).toString(16).padStart(2,'0'));
+      const uuid = uuidArr.join('');
+      // Format UUID for display: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      const uuidFmt = [uuidArr.slice(0,4),uuidArr.slice(4,6),uuidArr.slice(6,8),uuidArr.slice(8,10),uuidArr.slice(10,16)].map(g=>g.join('')).join('-');
+
+      // Match known UUIDs
+      let label = KNOWN_UUID[uuid];
+      if (!label) {
+        for (const [k,v] of Object.entries(KNOWN_UUID)) {
+          if (uuid.startsWith(k.substring(0,8))) { label = v; break; }
+        }
       }
-      results.push({key: label, value: `${b.size} bytes${preview ? ' · ' + preview : ''}`, isAI: true, path: bpath});
+
+      // Detect C2PA via JUMBF binary signature:
+      // After 16 UUID bytes, C2PA content starts with a JUMBF box whose type is 'jumb'
+      if (!label && b.size > 32) {
+        const jumbOffset = b.o + b.hl + 16; // skip header + UUID
+        if (jumbOffset + 8 <= b.end) {
+          const innerType = r4(view, jumbOffset + 4);
+          if (innerType === 'jumb') {
+            label = 'C2PA Content Credentials — AI provenance (JUMBF)';
+          }
+        }
+      }
+
+      // Detect XMP via text signature in content
+      if (!label && b.size > 32) {
+        const sample = decodeText(buf, b.o+b.hl+16, Math.min(300, b.size-b.hl-16));
+        if (sample.includes('<?xpacket') || sample.includes('<x:xmpmeta') || sample.includes('http://ns.adobe.com/xap')) {
+          label = 'XMP Metadata';
+        }
+      }
+
+      if (!label) label = 'UUID Extension (non-standard metadata)';
+
+      results.push({key: label, value: `UUID: ${uuidFmt} · ${b.size} bytes`, isAI: true, path: bpath});
     }
 
     // ── c2pa box type ─────────────────────────────────────────────────────
