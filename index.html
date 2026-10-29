@@ -1,322 +1,454 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="coi-serviceworker.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>AI Tag Eraser — Strip Video Metadata</title>
+  <title>AI Tag Eraser</title>
   <style>
     :root {
-      --bg: #0f0f13; --card: #1a1a24; --card2: #22222e;
-      --accent: #7c5cfc; --accent2: #a78bfa;
-      --green: #34d399; --red: #f87171; --yellow: #fbbf24;
-      --text: #e5e7eb; --muted: #9ca3af; --border: #2d2d3d; --radius: 16px;
+      --bg:#0f0f13;--card:#1a1a24;--card2:#22222e;
+      --accent:#7c5cfc;--accent2:#a78bfa;
+      --green:#34d399;--red:#f87171;
+      --text:#e5e7eb;--muted:#9ca3af;--border:#2d2d3d;--r:16px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; min-height: 100dvh; padding: 16px; display: flex; flex-direction: column; align-items: center; }
-    header { width: 100%; max-width: 560px; text-align: center; padding: 28px 0 20px; }
-    .logo { font-size: 2.2rem; margin-bottom: 6px; }
-    h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #a78bfa, #7c5cfc, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .subtitle { color: var(--muted); font-size: 0.88rem; margin-top: 6px; }
-    .badge-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-    .badge { background: var(--card2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: var(--muted); }
-    .badge.green { color: var(--green); border-color: #065f46; }
-    .badge.purple { color: var(--accent2); border-color: #4c1d95; }
-    main { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 16px; }
-    .dropzone { border: 2px dashed var(--border); border-radius: var(--radius); background: var(--card); padding: 40px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; position: relative; }
-    .dropzone.drag-over { border-color: var(--accent); background: #1e1838; }
-    .dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .dropzone .icon { font-size: 2.5rem; margin-bottom: 10px; }
-    .dropzone .hint { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
-    .dropzone .pick-btn { display: inline-block; margin-top: 14px; padding: 10px 24px; background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.9rem; font-weight: 600; pointer-events: none; }
-    .file-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: none; }
-    .file-card.visible { display: block; }
-    .file-info { display: flex; align-items: center; gap: 12px; }
-    .file-icon { font-size: 2rem; flex-shrink: 0; }
-    .file-details { flex: 1; min-width: 0; }
-    .file-name { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .file-size { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
-    .clear-btn { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.8rem; }
-    .status-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: none; }
-    .status-card.visible { display: block; }
-    .status-header { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
-    .log { font-family: "SF Mono","Fira Code","Courier New",monospace; font-size: 0.78rem; color: #7dd3fc; background: #0c0c14; border-radius: 10px; padding: 12px; max-height: 120px; overflow-y: auto; line-height: 1.6; }
-    .progress-bar { height: 6px; background: var(--card2); border-radius: 99px; margin-top: 12px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 99px; transition: width 0.3s ease; }
-    .meta-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: none; }
-    .meta-card.visible { display: block; }
-    .meta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .meta-title { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .tag-count { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
-    .tag-count.has-tags { background: #7f1d1d; color: var(--red); }
-    .tag-count.no-tags { background: #064e3b; color: var(--green); }
-    .meta-table { font-size: 0.8rem; width: 100%; border-collapse: collapse; }
-    .meta-table tr + tr td { border-top: 1px solid var(--border); }
-    .meta-table td { padding: 7px 8px; vertical-align: top; }
-    .meta-table td:first-child { color: var(--muted); white-space: nowrap; width: 40%; font-family: "SF Mono",monospace; font-size: 0.75rem; }
-    .meta-table td:last-child { color: var(--text); word-break: break-all; }
-    .no-meta-msg { text-align: center; color: var(--green); padding: 16px 0 8px; font-size: 0.9rem; }
-    .action-row { display: flex; gap: 10px; }
-    .btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
-    .btn:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), #6d28d9); color: #fff; }
-    .btn-secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
-    .result-card { background: #0d2818; border: 1px solid #065f46; border-radius: var(--radius); padding: 20px; text-align: center; display: none; }
-    .result-card.visible { display: block; }
-    .result-card .icon { font-size: 2.5rem; margin-bottom: 8px; }
-    .result-card h3 { color: var(--green); font-size: 1.1rem; margin-bottom: 4px; }
-    .result-card p { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
-    .download-btn { display: inline-block; padding: 12px 28px; background: var(--green); color: #000; border-radius: 50px; font-weight: 700; font-size: 0.95rem; text-decoration: none; cursor: pointer; }
-    .privacy-note { text-align: center; color: var(--muted); font-size: 0.75rem; margin-top: 8px; padding: 0 8px; }
-    .privacy-note span { color: var(--green); }
-    footer { width: 100%; max-width: 560px; text-align: center; padding: 24px 0 12px; color: var(--muted); font-size: 0.75rem; }
-    .loader-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 16px; }
-    .loader-overlay.hidden { display: none; }
-    .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loader-text { color: var(--muted); font-size: 0.9rem; }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100dvh;padding:16px;display:flex;flex-direction:column;align-items:center;}
+    header{width:100%;max-width:560px;text-align:center;padding:28px 0 20px;}
+    .logo{font-size:2.4rem;margin-bottom:6px;}
+    h1{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#7c5cfc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .subtitle{color:var(--muted);font-size:.88rem;margin-top:6px;}
+    .badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px;}
+    .badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.75rem;color:var(--muted);}
+    .badge.g{color:var(--green);border-color:#065f46;}
+    .badge.p{color:var(--accent2);border-color:#4c1d95;}
+    main{width:100%;max-width:560px;display:flex;flex-direction:column;gap:14px;}
+    .drop{border:2px dashed var(--border);border-radius:var(--r);background:var(--card);padding:40px 20px;text-align:center;cursor:pointer;transition:.2s;position:relative;}
+    .drop.over{border-color:var(--accent);background:#1e1838;}
+    .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .drop .di{font-size:2.5rem;margin-bottom:10px;}
+    .drop .dh{color:var(--muted);font-size:.83rem;margin-top:6px;}
+    .drop .db{display:inline-block;margin-top:14px;padding:10px 24px;background:var(--accent);color:#fff;border-radius:50px;font-size:.9rem;font-weight:600;pointer-events:none;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:none;}
+    .card.on{display:block;}
+    .fi{display:flex;align-items:center;gap:12px;}
+    .fx{font-size:2rem;flex-shrink:0;}
+    .fd{flex:1;min-width:0;}
+    .fn{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fs{color:var(--muted);font-size:.8rem;margin-top:2px;}
+    .xbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem;}
+    .fmt-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;margin-top:6px;}
+    .fmt-ok{background:#1a3321;color:var(--green);}
+    .fmt-warn{background:#3b2108;color:var(--yellow,#fbbf24);}
+    .row{display:flex;gap:10px;}
+    .btn{flex:1;padding:14px;border:none;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;transition:.15s;}
+    .btn:active{transform:scale(.97);}
+    .btn:disabled{opacity:.4;cursor:not-allowed;}
+    .btn-p{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;}
+    .btn-s{background:var(--card2);color:var(--text);border:1px solid var(--border);}
+    .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+    .mtitle{font-size:.82rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .tc{font-size:.75rem;padding:3px 10px;border-radius:20px;font-weight:600;}
+    .tc.bad{background:#7f1d1d;color:var(--red);}
+    .tc.good{background:#064e3b;color:var(--green);}
+    table.mt{font-size:.8rem;width:100%;border-collapse:collapse;}
+    table.mt tr+tr td{border-top:1px solid var(--border);}
+    table.mt td{padding:7px 8px;vertical-align:top;}
+    table.mt td:first-child{color:var(--muted);white-space:nowrap;width:42%;font-family:monospace;font-size:.74rem;}
+    table.mt td:last-child{color:var(--text);word-break:break-all;}
+    .nomsg{text-align:center;color:var(--green);padding:14px 0 6px;font-size:.9rem;}
+    .prog{height:6px;background:var(--card2);border-radius:99px;margin-top:12px;overflow:hidden;}
+    .pf{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .3s;}
+    .res{background:#0d2818;border:1px solid #065f46;border-radius:var(--r);padding:20px;text-align:center;display:none;}
+    .res.on{display:block;}
+    .res .ri{font-size:2.5rem;margin-bottom:8px;}
+    .res h3{color:var(--green);font-size:1.1rem;margin-bottom:4px;}
+    .res p{color:var(--muted);font-size:.85rem;margin-bottom:16px;}
+    .dl{display:inline-block;padding:12px 28px;background:var(--green);color:#000;border-radius:50px;font-weight:700;font-size:.95rem;text-decoration:none;}
+    .note{text-align:center;color:var(--muted);font-size:.74rem;margin-top:4px;padding:0 8px;}
+    .note span{color:var(--green);}
+    .warn-card{background:#1f1208;border:1px solid #78350f;border-radius:var(--r);padding:14px 16px;display:none;}
+    .warn-card.on{display:block;}
+    .warn-card p{color:#fbbf24;font-size:.85rem;}
+    .warn-card p b{display:block;margin-bottom:4px;}
+    footer{width:100%;max-width:560px;text-align:center;padding:24px 0 10px;color:var(--muted);font-size:.74rem;}
   </style>
 </head>
 <body>
-<div class="loader-overlay" id="loaderOverlay">
-  <div class="spinner"></div>
-  <div class="loader-text">Loading video engine…</div>
-</div>
 <header>
   <div class="logo">🧹</div>
   <h1>AI Tag Eraser</h1>
   <p class="subtitle">Strip all metadata &amp; AI provenance tags from videos</p>
-  <div class="badge-row">
-    <span class="badge green">✓ 100% Private</span>
-    <span class="badge green">✓ No Upload</span>
-    <span class="badge purple">✓ Free Forever</span>
+  <div class="badges">
+    <span class="badge g">✓ 100% Private</span>
+    <span class="badge g">✓ No Upload Ever</span>
+    <span class="badge p">✓ Free Forever</span>
   </div>
 </header>
+
 <main>
-  <div class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept="video/*,.mp4,.mov,.avi,.webm,.mkv,.m4v,.ts,.mts" />
-    <div class="icon">🎬</div>
+  <!-- Drop zone -->
+  <div class="drop" id="drop">
+    <input type="file" id="filePick" accept="video/*,.mp4,.mov,.m4v,.avi,.webm,.mkv" />
+    <div class="di">🎬</div>
     <div>Tap to choose a video</div>
-    <div class="hint">MP4, MOV, AVI, MKV, WebM · Runs locally on your device</div>
-    <div class="pick-btn">Pick Video</div>
+    <div class="dh">MP4 · MOV · M4V — Runs locally on your device</div>
+    <div class="db">Pick Video</div>
   </div>
-  <div class="file-card" id="fileCard">
-    <div class="file-info">
-      <div class="file-icon">🎞️</div>
-      <div class="file-details">
-        <div class="file-name" id="fileName">—</div>
-        <div class="file-size" id="fileSize">—</div>
+
+  <!-- Format warning -->
+  <div class="warn-card" id="warnCard">
+    <p><b>⚠️ Limited support for this format</b>
+    This tool fully supports MP4, MOV, and M4V files. WebM, MKV, and AVI may not have all metadata removed. You can still try — your file will be unchanged if anything goes wrong.</p>
+  </div>
+
+  <!-- File info -->
+  <div class="card" id="fileCard">
+    <div class="fi">
+      <div class="fx">🎞️</div>
+      <div class="fd">
+        <div class="fn" id="fName"></div>
+        <div class="fs" id="fSize"></div>
+        <div id="fmtBadge"></div>
       </div>
-      <button class="clear-btn" id="clearBtn">✕ Clear</button>
+      <button class="xbtn" id="clearBtn">✕</button>
     </div>
   </div>
-  <div class="action-row" id="actionRow" style="display:none">
-    <button class="btn btn-secondary" id="scanBtn">🔍 Scan Tags</button>
-    <button class="btn btn-primary" id="stripBtn">🗑️ Strip &amp; Save</button>
+
+  <!-- Actions -->
+  <div class="row" id="actionRow" style="display:none">
+    <button class="btn btn-s" id="scanBtn">🔍 Scan Tags</button>
+    <button class="btn btn-p" id="stripBtn">🗑️ Strip &amp; Save</button>
   </div>
-  <div class="meta-card" id="metaCard">
-    <div class="meta-header">
-      <span class="meta-title">Detected Metadata</span>
-      <span class="tag-count" id="tagCount">0 tags</span>
+
+  <!-- Metadata results -->
+  <div class="card" id="metaCard">
+    <div class="mhead">
+      <span class="mtitle">Detected Metadata</span>
+      <span class="tc" id="tagCount"></span>
     </div>
-    <div id="metaContent"></div>
+    <div id="metaBody"></div>
+    <div class="prog"><div class="pf" id="scanProg"></div></div>
   </div>
-  <div class="status-card" id="statusCard">
-    <div class="status-header">Processing</div>
-    <div class="log" id="logBox"></div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- Strip result -->
+  <div class="res" id="resCard">
+    <div class="ri">✅</div>
+    <h3>Clean &amp; Ready</h3>
+    <p id="resMsg"></p>
+    <a id="dlLink" class="dl">⬇️ Download Clean Video</a>
   </div>
-  <div class="result-card" id="resultCard">
-    <div class="icon">✅</div>
-    <h3>All done!</h3>
-    <p id="resultMsg">Metadata stripped successfully. Your video is clean.</p>
-    <a id="downloadLink" class="download-btn">⬇️ Download Clean Video</a>
-  </div>
-  <p class="privacy-note">
-    <span>🔒 Fully private</span> — your video never leaves your device.<br>
-    Processing happens in your browser using WebAssembly.
-  </p>
+
+  <p class="note"><span>🔒 Fully private</span> — video never leaves your device.<br>
+  Pure JavaScript, no server, no WebAssembly required.</p>
 </main>
-<footer>AI Tag Eraser · Strips C2PA, XMP, EXIF, and all video metadata · Free &amp; open</footer>
-<script type="module">
-  import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
-  import { fetchFile, toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
 
-  const loaderOverlay = document.getElementById('loaderOverlay');
-  const dropzone      = document.getElementById('dropzone');
-  const fileInput     = document.getElementById('fileInput');
-  const fileCard      = document.getElementById('fileCard');
-  const fileName      = document.getElementById('fileName');
-  const fileSize      = document.getElementById('fileSize');
-  const clearBtn      = document.getElementById('clearBtn');
-  const actionRow     = document.getElementById('actionRow');
-  const scanBtn       = document.getElementById('scanBtn');
-  const stripBtn      = document.getElementById('stripBtn');
-  const metaCard      = document.getElementById('metaCard');
-  const metaContent   = document.getElementById('metaContent');
-  const tagCount      = document.getElementById('tagCount');
-  const statusCard    = document.getElementById('statusCard');
-  const logBox        = document.getElementById('logBox');
-  const progressFill  = document.getElementById('progressFill');
-  const resultCard    = document.getElementById('resultCard');
-  const resultMsg     = document.getElementById('resultMsg');
-  const downloadLink  = document.getElementById('downloadLink');
+<footer>AI Tag Eraser · Strips C2PA, XMP, EXIF &amp; all MP4 metadata · Free &amp; open</footer>
 
-  let ffmpeg = null;
-  let selectedFile = null;
-  let outputUrl = null;
+<script>
+'use strict';
 
-  async function loadFFmpeg() {
-    ffmpeg = new FFmpeg();
-    ffmpeg.on('log', ({ message }) => appendLog(message));
-    ffmpeg.on('progress', ({ progress }) => {
-      progressFill.style.width = (Math.min(progress, 1) * 100) + '%';
-    });
-    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
-    try {
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`,   'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-      });
-      loaderOverlay.classList.add('hidden');
-    } catch (e) {
-      loaderOverlay.innerHTML = `<div style="color:#f87171;text-align:center;padding:24px"><div style="font-size:2rem;margin-bottom:8px">⚠️</div><div>Failed to load video engine.</div><div style="font-size:0.8rem;margin-top:6px;color:#9ca3af">Check your internet connection and reload.<br>${e.message}</div><button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#7c5cfc;color:#fff;border:none;border-radius:50px;font-size:1rem;cursor:pointer">Reload</button></div>`;
+// ─── MP4 Box Engine ──────────────────────────────────────────────────────────
+
+function r4(view, o) {
+  return String.fromCharCode(view.getUint8(o),view.getUint8(o+1),view.getUint8(o+2),view.getUint8(o+3));
+}
+
+function parseBoxes(buf, start, end) {
+  const view = new DataView(buf);
+  const out = [];
+  let o = start;
+  while (o + 8 <= end) {
+    let size = view.getUint32(o, false);
+    const type = r4(view, o + 4);
+    let hl = 8;
+    if (size === 1) {
+      if (o + 16 > end) break;
+      size = view.getUint32(o+8,false) * 4294967296 + view.getUint32(o+12,false);
+      hl = 16;
+    } else if (size === 0) {
+      size = end - o;
+    }
+    if (size < 8 || o + size > end) break;
+    out.push({o, size, type, hl, end: o + size});
+    o += size;
+  }
+  return out;
+}
+
+// Containers we recurse into
+const CONTAINERS = new Set(['moov','trak','mdia','minf','stbl','dinf','edts','mvex','moof','traf','clip']);
+// Boxes that ARE metadata — strip them
+const STRIP = new Set(['udta','uuid']);
+
+function stripBoxes(buf, start, end) {
+  const boxes = parseBoxes(buf, start, end);
+  const chunks = [];
+  const removed = [];
+  for (const b of boxes) {
+    if (STRIP.has(b.type)) {
+      removed.push(b.type === 'uuid' ? 'uuid (XMP / C2PA / AI provenance)' : 'udta (all user metadata)');
+    } else if (CONTAINERS.has(b.type)) {
+      const [kids, kRemoved] = stripBoxes(buf, b.o + b.hl, b.end);
+      removed.push(...kRemoved);
+      const kSize = kids.reduce((s,c) => s + c.byteLength, 0);
+      const newSize = b.hl + kSize;
+      const hdr = new Uint8Array(b.hl);
+      const hv = new DataView(hdr.buffer);
+      if (b.hl === 8) {
+        hv.setUint32(0, newSize, false);
+      } else {
+        hv.setUint32(0, 1, false);
+        hv.setUint32(8, Math.floor(newSize / 4294967296), false);
+        hv.setUint32(12, newSize >>> 0, false);
+      }
+      hdr[4]=b.type.charCodeAt(0); hdr[5]=b.type.charCodeAt(1);
+      hdr[6]=b.type.charCodeAt(2); hdr[7]=b.type.charCodeAt(3);
+      chunks.push(hdr.buffer, ...kids);
+    } else {
+      chunks.push(buf.slice(b.o, b.end));
     }
   }
+  return [chunks, removed];
+}
 
-  function formatBytes(b) {
-    if (b < 1024) return b + ' B';
-    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-    return (b / 1048576).toFixed(1) + ' MB';
+// ─── Tag Reader ──────────────────────────────────────────────────────────────
+
+const ITUNES = {
+  '\u00a9nam':'Title', '\u00a9ART':'Artist', '\u00a9alb':'Album',
+  '\u00a9cmt':'Comment', '\u00a9des':'Description', '\u00a9gen':'Genre',
+  '\u00a9too':'Software / Tool', '\u00a9wrt':'Composer', '\u00a9day':'Date',
+  '\u00a9lyr':'Lyrics', 'cprt':'Copyright', 'aART':'Album Artist',
+  'desc':'Description', 'ldes':'Long Description', 'purl':'Podcast URL',
+  'tvsh':'TV Show', 'tven':'TV Episode', 'keyw':'Keywords',
+};
+
+function findBox(buf, path) {
+  let start = 0, end = buf.byteLength;
+  let box = null;
+  for (const type of path) {
+    const boxes = parseBoxes(buf, start, end);
+    box = boxes.find(b => b.type === type);
+    if (!box) return null;
+    start = box.o + box.hl + (type === 'meta' ? 4 : 0); // meta is FullBox
+    end = box.end;
   }
+  return box ? {start, end} : null;
+}
 
-  function appendLog(msg) {
-    const line = document.createElement('div');
-    line.textContent = msg;
-    logBox.appendChild(line);
-    logBox.scrollTop = logBox.scrollHeight;
-  }
+function readTags(buf) {
+  const tags = {};
+  const view = new DataView(buf);
 
-  function setButtons(disabled) {
-    scanBtn.disabled  = disabled;
-    stripBtn.disabled = disabled;
-  }
+  // Format brand
+  const top = parseBoxes(buf, 0, buf.byteLength);
+  const ftyp = top.find(b => b.type === 'ftyp');
+  if (ftyp) tags['Format Brand'] = r4(view, ftyp.o + ftyp.hl).trim() || 'mp4';
 
-  function handleFile(file) {
-    if (!file) return;
-    selectedFile = file;
-    fileName.textContent = file.name;
-    fileSize.textContent = formatBytes(file.size);
-    fileCard.classList.add('visible');
-    actionRow.style.display = 'flex';
-    metaCard.classList.remove('visible');
-    statusCard.classList.remove('visible');
-    resultCard.classList.remove('visible');
-    if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
-  }
-
-  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
-  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
-  dropzone.addEventListener('drop', e => {
-    e.preventDefault(); dropzone.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
-
-  clearBtn.addEventListener('click', () => {
-    selectedFile = null; fileInput.value = '';
-    fileCard.classList.remove('visible'); actionRow.style.display = 'none';
-    metaCard.classList.remove('visible'); statusCard.classList.remove('visible');
-    resultCard.classList.remove('visible');
-    if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
-  });
-
-  scanBtn.addEventListener('click', async () => {
-    if (!selectedFile || !ffmpeg) return;
-    setButtons(true); logBox.innerHTML = '';
-    statusCard.classList.add('visible'); metaCard.classList.remove('visible');
-    resultCard.classList.remove('visible'); progressFill.style.width = '20%';
-    const ext = selectedFile.name.split('.').pop().toLowerCase() || 'mp4';
-    const inName = `input.${ext}`;
-    try {
-      await ffmpeg.writeFile(inName, await fetchFile(selectedFile));
-      progressFill.style.width = '60%';
-      const logs = [];
-      const capture = ({ message }) => logs.push(message);
-      ffmpeg.on('log', capture);
-      try { await ffmpeg.exec(['-i', inName, '-f', 'null', '-']); } catch(_) {}
-      ffmpeg.off('log', capture);
-      progressFill.style.width = '100%';
-      const fullLog = logs.join('\n');
-      const metaTags = {};
-      const metaSection = fullLog.match(/Metadata:\n([\s\S]*?)(?=Duration:|$)/);
-      if (metaSection) {
-        const metaRegex = /^\s{4}(\w[\w\s.-]*?)\s*:\s*(.+)$/gm;
-        let match;
-        while ((match = metaRegex.exec(metaSection[1])) !== null) {
-          metaTags[match[1].trim()] = match[2].trim();
+  // iTunes ilst
+  const ilst = findBox(buf, ['moov','udta','meta','ilst']);
+  if (ilst) {
+    const items = parseBoxes(buf, ilst.start, ilst.end);
+    for (const item of items) {
+      const label = ITUNES[item.type] || item.type;
+      const dbox = parseBoxes(buf, item.o + item.hl, item.end).find(b => b.type === 'data');
+      if (dbox && dbox.size > 16) {
+        const vo = dbox.o + dbox.hl + 8;
+        const vl = dbox.end - vo;
+        if (vl > 0) {
+          try {
+            const text = new TextDecoder().decode(new Uint8Array(buf, vo, vl)).trim();
+            if (text) tags[label] = text;
+          } catch(e) {}
         }
       }
-      await ffmpeg.deleteFile(inName);
-      renderMeta(metaTags);
-    } catch (e) { appendLog('Error: ' + e.message); }
-    finally { setButtons(false); progressFill.style.width = '100%'; }
-  });
-
-  function renderMeta(tags) {
-    const keys = Object.keys(tags);
-    metaCard.classList.add('visible');
-    if (keys.length === 0) {
-      tagCount.textContent = 'No tags found'; tagCount.className = 'tag-count no-tags';
-      metaContent.innerHTML = '<div class="no-meta-msg">🎉 No metadata detected — this video looks clean!</div>';
-      return;
     }
-    tagCount.textContent = keys.length + (keys.length === 1 ? ' tag' : ' tags');
-    tagCount.className = 'tag-count has-tags';
-    const table = document.createElement('table');
-    table.className = 'meta-table';
-    for (const [k, v] of Object.entries(tags)) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${k}</td><td>${v}</td>`;
-      table.appendChild(tr);
-    }
-    metaContent.innerHTML = ''; metaContent.appendChild(table);
   }
 
-  stripBtn.addEventListener('click', async () => {
-    if (!selectedFile || !ffmpeg) return;
-    setButtons(true); logBox.innerHTML = '';
-    statusCard.classList.add('visible'); resultCard.classList.remove('visible');
-    progressFill.style.width = '0%';
-    const ext = selectedFile.name.split('.').pop().toLowerCase() || 'mp4';
-    const inName  = `input.${ext}`;
-    const outName = `clean.${ext}`;
-    try {
-      appendLog('Writing file to memory…');
-      await ffmpeg.writeFile(inName, await fetchFile(selectedFile));
-      progressFill.style.width = '20%';
-      appendLog('Stripping all metadata…');
-      await ffmpeg.exec(['-i', inName, '-map_metadata', '-1', '-map_chapters', '-1', '-c', 'copy', '-movflags', '+faststart', outName]);
-      appendLog('Reading output…');
-      const data = await ffmpeg.readFile(outName);
-      progressFill.style.width = '100%';
-      const mime = selectedFile.type || 'video/mp4';
-      const blob = new Blob([data.buffer], { type: mime });
-      if (outputUrl) URL.revokeObjectURL(outputUrl);
-      outputUrl = URL.createObjectURL(blob);
-      const cleanName = selectedFile.name.replace(/(\.\w+)$/, '_clean$1');
-      downloadLink.href = outputUrl; downloadLink.download = cleanName;
-      resultMsg.textContent = `Stripped ${formatBytes(selectedFile.size - blob.size)} of metadata. Clean file: ${formatBytes(blob.size)}`;
-      resultCard.classList.add('visible');
-      appendLog('Done! ✓');
-      await ffmpeg.deleteFile(inName);
-      await ffmpeg.deleteFile(outName);
-    } catch (e) { appendLog('Error: ' + e.message); alert('Something went wrong: ' + e.message); }
-    finally { setButtons(false); }
-  });
+  // uuid + udta children
+  const moovBox = top.find(b => b.type === 'moov');
+  if (moovBox) {
+    const moovBoxes = parseBoxes(buf, moovBox.o + moovBox.hl, moovBox.end);
+    let ui = 0;
+    for (const b of moovBoxes) {
+      if (b.type === 'uuid' && b.size >= 24) {
+        ui++;
+        const uuid = Array.from({length:16},(_,i)=>view.getUint8(b.o+b.hl+i).toString(16).padStart(2,'0')).join('');
+        let label = 'UUID Extension ' + ui;
+        if (uuid.startsWith('be7acfcb97a9')) label = 'XMP Metadata (uuid)';
+        else if (uuid.startsWith('d8fec3d6') || uuid.includes('c2pa')) label = 'C2PA Content Credentials — AI provenance (uuid)';
+        tags[label] = `Present · ${b.size} bytes`;
+      }
+      if (b.type === 'udta') {
+        const kids = parseBoxes(buf, b.o + b.hl, b.end);
+        for (const k of kids) {
+          if (k.type !== 'meta' && k.size > 12) {
+            try {
+              const bytes = new Uint8Array(buf, k.o + k.hl, Math.min(160, k.size - k.hl));
+              const text = new TextDecoder('utf-8',{fatal:false}).decode(bytes).replace(/\0/g,'').trim();
+              if (text.length > 1) tags[k.type] = text.substring(0, 120);
+            } catch(e) {}
+          }
+        }
+      }
+    }
+  }
+  return tags;
+}
 
-  loadFFmpeg();
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function isMP4(buf) {
+  if (buf.byteLength < 8) return false;
+  const view = new DataView(buf);
+  const t = r4(view, 4);
+  return ['ftyp','moov','mdat','wide','free'].includes(t);
+}
+
+function fmtBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+// ─── UI Wiring ────────────────────────────────────────────────────────────────
+
+const drop      = document.getElementById('drop');
+const filePick  = document.getElementById('filePick');
+const fileCard  = document.getElementById('fileCard');
+const fName     = document.getElementById('fName');
+const fSize     = document.getElementById('fSize');
+const fmtBadge  = document.getElementById('fmtBadge');
+const clearBtn  = document.getElementById('clearBtn');
+const actionRow = document.getElementById('actionRow');
+const scanBtn   = document.getElementById('scanBtn');
+const stripBtn  = document.getElementById('stripBtn');
+const metaCard  = document.getElementById('metaCard');
+const metaBody  = document.getElementById('metaBody');
+const tagCount  = document.getElementById('tagCount');
+const scanProg  = document.getElementById('scanProg');
+const resCard   = document.getElementById('resCard');
+const resMsg    = document.getElementById('resMsg');
+const dlLink    = document.getElementById('dlLink');
+const warnCard  = document.getElementById('warnCard');
+
+let selFile = null;
+let outUrl  = null;
+let fileBuf = null;
+
+function handleFile(file) {
+  if (!file) return;
+  selFile = file;
+  fName.textContent = file.name;
+  fSize.textContent = fmtBytes(file.size);
+  fileBuf = null;
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const supported = ['mp4','mov','m4v'].includes(ext);
+  fmtBadge.innerHTML = supported
+    ? `<span class="fmt-badge fmt-ok">✓ Fully supported</span>`
+    : `<span class="fmt-badge fmt-warn">⚠ Partial support</span>`;
+  warnCard.className = supported ? 'warn-card' : 'warn-card on';
+
+  fileCard.className  = 'card on';
+  actionRow.style.display = 'flex';
+  metaCard.className  = 'card';
+  resCard.className   = 'res';
+  if (outUrl) { URL.revokeObjectURL(outUrl); outUrl = null; }
+}
+
+filePick.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => {
+  e.preventDefault(); drop.classList.remove('over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+clearBtn.addEventListener('click', () => {
+  selFile = fileBuf = null; filePick.value = '';
+  fileCard.className = metaCard.className = 'card';
+  resCard.className = 'res'; warnCard.className = 'warn-card';
+  actionRow.style.display = 'none';
+  if (outUrl) { URL.revokeObjectURL(outUrl); outUrl = null; }
+});
+
+async function readFileBuf() {
+  if (fileBuf) return fileBuf;
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = e => { fileBuf = e.target.result; res(fileBuf); };
+    fr.onerror = rej;
+    fr.readAsArrayBuffer(selFile);
+  });
+}
+
+scanBtn.addEventListener('click', async () => {
+  if (!selFile) return;
+  scanBtn.disabled = stripBtn.disabled = true;
+  scanProg.style.width = '30%';
+  metaBody.innerHTML = '';
+  metaCard.className = 'card on';
+  resCard.className = 'res';
+  try {
+    const buf = await readFileBuf();
+    scanProg.style.width = '80%';
+    if (!isMP4(buf)) {
+      metaBody.innerHTML = '<div class="nomsg" style="color:var(--muted)">⚠️ Cannot read tags for this format.<br>You can still try Strip &amp; Save.</div>';
+      tagCount.textContent = '?'; tagCount.className = 'tc';
+    } else {
+      const tags = readTags(buf);
+      const keys = Object.keys(tags);
+      if (keys.length === 0) {
+        metaBody.innerHTML = '<div class="nomsg">🎉 No metadata found — already clean!</div>';
+        tagCount.textContent = 'Clean'; tagCount.className = 'tc good';
+      } else {
+        tagCount.textContent = keys.length + ' tag' + (keys.length > 1 ? 's' : '');
+        tagCount.className = 'tc bad';
+        const t = document.createElement('table');
+        t.className = 'mt';
+        for (const [k,v] of Object.entries(tags)) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${k}</td><td>${v}</td>`;
+          t.appendChild(tr);
+        }
+        metaBody.appendChild(t);
+      }
+    }
+    scanProg.style.width = '100%';
+  } catch(e) {
+    metaBody.innerHTML = `<div class="nomsg" style="color:var(--red)">Error: ${e.message}</div>`;
+  } finally {
+    scanBtn.disabled = stripBtn.disabled = false;
+  }
+});
+
+stripBtn.addEventListener('click', async () => {
+  if (!selFile) return;
+  scanBtn.disabled = stripBtn.disabled = true;
+  resCard.className = 'res';
+  try {
+    const buf = await readFileBuf();
+    if (!isMP4(buf)) {
+      alert('This format is not fully supported yet. Only MP4, MOV, and M4V files can be stripped.');
+      return;
+    }
+    const [chunks, removed] = stripBoxes(buf, 0, buf.byteLength);
+    const blob = new Blob(chunks, {type: selFile.type || 'video/mp4'});
+    if (outUrl) URL.revokeObjectURL(outUrl);
+    outUrl = URL.createObjectURL(blob);
+    const cleanName = selFile.name.replace(/(\.\w+)$/, '_clean$1');
+    dlLink.href = outUrl; dlLink.download = cleanName;
+    const saved = selFile.size - blob.size;
+    const uniqueRemoved = [...new Set(removed)];
+    resMsg.textContent = uniqueRemoved.length > 0
+      ? `Removed: ${uniqueRemoved.join(', ')}. Saved ${fmtBytes(saved)}. Clean file: ${fmtBytes(blob.size)}`
+      : `No metadata found to remove. File size: ${fmtBytes(blob.size)}`;
+    resCard.className = 'res on';
+  } catch(e) {
+    alert('Error: ' + e.message);
+  } finally {
+    scanBtn.disabled = stripBtn.disabled = false;
+  }
+});
 </script>
 </body>
 </html>
