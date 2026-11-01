@@ -1,99 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>AI Tag Eraser</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+  <title>AI Tag Eraser — Video &amp; Audio</title>
   <style>
     :root{--bg:#0f0f13;--card:#1a1a24;--card2:#22222e;--accent:#7c5cfc;--accent2:#a78bfa;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--text:#e5e7eb;--muted:#9ca3af;--border:#2d2d3d;--r:16px;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100dvh;padding:16px;display:flex;flex-direction:column;align-items:center;}
-    header{width:100%;max-width:580px;text-align:center;padding:24px 0 18px;}
-    .logo{font-size:2.2rem;margin-bottom:4px;}
-    h1{font-size:1.45rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#7c5cfc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-    .sub{color:var(--muted);font-size:.86rem;margin-top:5px;}
-    .badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
-    .badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px 11px;font-size:.73rem;color:var(--muted);}
+    header{width:100%;max-width:580px;text-align:center;padding:22px 0 16px;}
+    .logo{font-size:2.1rem;margin-bottom:4px;}
+    h1{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#7c5cfc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .sub{color:var(--muted);font-size:.84rem;margin-top:5px;}
+    .badges{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:9px;}
+    .badge{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.71rem;color:var(--muted);}
     .badge.g{color:var(--green);border-color:#065f46;}.badge.p{color:var(--accent2);border-color:#4c1d95;}
-    main{width:100%;max-width:580px;display:flex;flex-direction:column;gap:13px;}
-    .drop{border:2px dashed var(--border);border-radius:var(--r);background:var(--card);padding:36px 20px;text-align:center;cursor:pointer;transition:.2s;position:relative;}
+    main{width:100%;max-width:580px;display:flex;flex-direction:column;gap:12px;}
+    .tabs{display:flex;background:var(--card2);border-radius:12px;padding:4px;gap:4px;}
+    .tab{flex:1;padding:10px;border:none;border-radius:9px;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--muted);background:transparent;transition:.15s;}
+    .tab.active{background:var(--accent);color:#fff;}
+    .drop{border:2px dashed var(--border);border-radius:var(--r);background:var(--card);padding:34px 20px;text-align:center;cursor:pointer;transition:.2s;position:relative;}
     .drop.over{border-color:var(--accent);background:#1e1838;}
     .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-    .drop .di{font-size:2.4rem;margin-bottom:8px;}
-    .drop .dh{color:var(--muted);font-size:.82rem;margin-top:5px;}
-    .drop .db{display:inline-block;margin-top:12px;padding:9px 22px;background:var(--accent);color:#fff;border-radius:50px;font-size:.88rem;font-weight:600;pointer-events:none;}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px;display:none;}
+    .drop .di{font-size:2.3rem;margin-bottom:8px;}
+    .drop .dh{color:var(--muted);font-size:.8rem;margin-top:5px;}
+    .drop .db{display:inline-block;margin-top:12px;padding:9px 22px;background:var(--accent);color:#fff;border-radius:50px;font-size:.87rem;font-weight:600;pointer-events:none;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:none;}
     .card.on{display:block;}
     .fi{display:flex;align-items:center;gap:11px;}
-    .fx{font-size:1.9rem;flex-shrink:0;}
+    .fx{font-size:1.8rem;flex-shrink:0;}
     .fd{flex:1;min-width:0;}
-    .fn{font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .fs{color:var(--muted);font-size:.78rem;margin-top:2px;}
-    .xbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:.78rem;}
+    .fn{font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fs{color:var(--muted);font-size:.76rem;margin-top:2px;}
+    .xbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.76rem;}
     .row{display:flex;gap:10px;}
-    .btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:.93rem;font-weight:700;cursor:pointer;transition:.15s;}
+    .btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:.92rem;font-weight:700;cursor:pointer;transition:.15s;}
     .btn:active{transform:scale(.97);}
     .btn:disabled{opacity:.4;cursor:not-allowed;}
     .btn-p{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;}
     .btn-s{background:var(--card2);color:var(--text);border:1px solid var(--border);}
-    .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;}
-    .mtitle{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
-    .tc{font-size:.73rem;padding:3px 10px;border-radius:20px;font-weight:600;}
+    .mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .mtitle{font-size:.79rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .tc{font-size:.71rem;padding:3px 9px;border-radius:20px;font-weight:600;}
     .tc.bad{background:#7f1d1d;color:var(--red);}
     .tc.good{background:#064e3b;color:var(--green);}
     .tc.warn{background:#78350f;color:var(--yellow);}
-    table.mt{font-size:.79rem;width:100%;border-collapse:collapse;}
+    table.mt{font-size:.77rem;width:100%;border-collapse:collapse;}
     table.mt tr+tr td{border-top:1px solid var(--border);}
-    table.mt td{padding:7px 8px;vertical-align:top;}
-    table.mt td:first-child{color:var(--muted);white-space:nowrap;width:44%;font-family:monospace;font-size:.72rem;}
+    table.mt td{padding:6px 8px;vertical-align:top;}
+    table.mt td:first-child{color:var(--muted);white-space:nowrap;width:44%;font-family:monospace;font-size:.71rem;}
     table.mt td:last-child{color:var(--text);word-break:break-all;}
-    .ai-row td{background:#1a0a0a !important;}
     .ai-row td:first-child{color:var(--red) !important;}
-    .ai-row td:last-child{color:#fca5a5;}
-    .nomsg{text-align:center;color:var(--green);padding:14px 0 6px;font-size:.88rem;}
-    .prog{height:5px;background:var(--card2);border-radius:99px;margin-top:11px;overflow:hidden;}
+    .ai-row td{background:rgba(239,68,68,.06);}
+    .nomsg{text-align:center;color:var(--green);padding:12px 0 4px;font-size:.86rem;}
+    .prog{height:5px;background:var(--card2);border-radius:99px;margin-top:10px;overflow:hidden;}
     .pf{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .3s;}
-    .res{background:#0d2818;border:1px solid #065f46;border-radius:var(--r);padding:18px;text-align:center;display:none;}
+    .res{background:#0d2818;border:1px solid #065f46;border-radius:var(--r);padding:16px;text-align:center;display:none;}
     .res.on{display:block;}
-    .res .ri{font-size:2.3rem;margin-bottom:7px;}
-    .res h3{color:var(--green);font-size:1.05rem;margin-bottom:3px;}
-    .res p{color:var(--muted);font-size:.82rem;margin-bottom:14px;}
-    .dl{display:inline-block;padding:11px 26px;background:var(--green);color:#000;border-radius:50px;font-weight:700;font-size:.93rem;text-decoration:none;}
-    .note{text-align:center;color:var(--muted);font-size:.72rem;margin-top:4px;padding:0 8px;}
+    .res .ri{font-size:2.2rem;margin-bottom:6px;}
+    .res h3{color:var(--green);font-size:1rem;margin-bottom:3px;}
+    .res p{color:var(--muted);font-size:.8rem;margin-bottom:13px;}
+    .dl{display:inline-block;padding:10px 24px;background:var(--green);color:#000;border-radius:50px;font-weight:700;font-size:.92rem;text-decoration:none;}
+    .warn-box{background:#1a1008;border:1px solid #78350f;border-radius:var(--r);padding:12px 14px;font-size:.8rem;color:#fbbf24;display:none;}
+    .warn-box.on{display:block;}
+    .note{text-align:center;color:var(--muted);font-size:.71rem;margin-top:3px;}
     .note span{color:var(--green);}
-    .synth-note{background:#1a1008;border:1px solid #78350f;border-radius:var(--r);padding:13px 15px;font-size:.82rem;color:#fbbf24;display:none;}
-    .synth-note.on{display:block;}
-    footer{width:100%;max-width:580px;text-align:center;padding:22px 0 10px;color:var(--muted);font-size:.72rem;}
+    footer{width:100%;max-width:580px;text-align:center;padding:20px 0 8px;color:var(--muted);font-size:.7rem;}
   </style>
 </head>
 <body>
 <header>
   <div class="logo">🧹</div>
   <h1>AI Tag Eraser</h1>
-  <p class="sub">Strip all metadata &amp; AI provenance tags from videos</p>
+  <p class="sub">Strip all metadata &amp; AI provenance tags from video &amp; audio</p>
   <div class="badges">
     <span class="badge g">✓ 100% Private</span>
-    <span class="badge g">✓ No Upload Ever</span>
+    <span class="badge g">✓ No Upload</span>
     <span class="badge p">✓ Free Forever</span>
   </div>
 </header>
 <main>
+  <!-- Mode tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tabVideo" onclick="setMode('video')">🎬 Video (MP4/MOV)</button>
+    <button class="tab" id="tabAudio" onclick="setMode('audio')">🎵 Audio (MP3/M4A)</button>
+  </div>
+
+  <!-- Drop zone -->
   <div class="drop" id="drop">
-    <input type="file" id="filePick" accept="video/*,.mp4,.mov,.m4v" />
-    <div class="di">🎬</div>
-    <div>Tap to choose a video</div>
-    <div class="dh">MP4 · MOV · M4V — processed entirely on your device</div>
-    <div class="db">Pick Video</div>
+    <input type="file" id="filePick" accept="video/*,.mp4,.mov,.m4v"/>
+    <div class="di" id="dropIcon">🎬</div>
+    <div id="dropText">Tap to choose a video</div>
+    <div class="dh" id="dropHint">MP4 · MOV · M4V — processed locally on your device</div>
+    <div class="db">Pick File</div>
   </div>
 
   <div class="card" id="fileCard">
     <div class="fi">
-      <div class="fx">🎞️</div>
+      <div class="fx" id="fileIcon">🎞️</div>
       <div class="fd">
         <div class="fn" id="fName"></div>
         <div class="fs" id="fSize"></div>
       </div>
-      <button class="xbtn" id="clearBtn">✕ Clear</button>
+      <button class="xbtn" id="clearBtn">✕</button>
     </div>
   </div>
 
@@ -111,44 +120,55 @@
     <div class="prog"><div class="pf" id="scanProg"></div></div>
   </div>
 
-  <div class="synth-note" id="synthNote">
-    ⚠️ <strong>Note on SynthID:</strong> Google embeds an invisible AI watermark called SynthID directly into the video pixels and audio. This <em>cannot</em> be detected or removed by metadata stripping — it requires specialized tools. The metadata tags above have been removed, but SynthID watermarking may still be present in the video content itself.
-  </div>
+  <div class="warn-box" id="warnBox"></div>
 
   <div class="res" id="resCard">
     <div class="ri">✅</div>
     <h3>Clean &amp; Ready</h3>
     <p id="resMsg"></p>
-    <a id="dlLink" class="dl">⬇️ Download Clean Video</a>
+    <a id="dlLink" class="dl">⬇️ Download Clean File</a>
   </div>
 
-  <p class="note"><span>🔒 Fully private</span> — video never leaves your device.<br>Pure JavaScript · No server · No WebAssembly</p>
+  <p class="note"><span>🔒 Fully private</span> — file never leaves your device · Pure JavaScript</p>
 </main>
-<footer>AI Tag Eraser · Strips C2PA, XMP, EXIF, Google/Gemini metadata · Free &amp; open</footer>
+<footer>AI Tag Eraser · Strips C2PA, XMP, ID3, EXIF &amp; AI metadata · Free &amp; open</footer>
 
 <script>
 'use strict';
 
-// ─── Box Parser ───────────────────────────────────────────────────────────────
+// ─── Globals ─────────────────────────────────────────────────────────────────
+let mode = 'video'; // 'video' | 'audio'
+let selFile = null, fileBuf = null, outUrl = null;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('tabVideo').className = 'tab' + (m==='video'?' active':'');
+  document.getElementById('tabAudio').className = 'tab' + (m==='audio'?' active':'');
+  const isAudio = m === 'audio';
+  document.getElementById('filePick').accept = isAudio
+    ? 'audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac'
+    : 'video/*,.mp4,.mov,.m4v';
+  document.getElementById('dropIcon').textContent = isAudio ? '🎵' : '🎬';
+  document.getElementById('dropText').textContent = isAudio ? 'Tap to choose an audio file' : 'Tap to choose a video';
+  document.getElementById('dropHint').textContent = isAudio
+    ? 'MP3 · M4A · WAV · AAC — processed locally'
+    : 'MP4 · MOV · M4V — processed locally';
+  clearFile();
+}
+
+// ─── MP4/MOV Box Engine ───────────────────────────────────────────────────────
 function r4(view, o) {
   return String.fromCharCode(view.getUint8(o),view.getUint8(o+1),view.getUint8(o+2),view.getUint8(o+3));
 }
-
 function parseBoxes(buf, start, end) {
-  const view = new DataView(buf);
-  const out = [];
+  const view = new DataView(buf), out = [];
   let o = start;
   while (o + 8 <= end) {
     let size = view.getUint32(o, false);
     const type = r4(view, o+4);
     let hl = 8;
-    if (size === 1) {
-      if (o+16 > end) break;
-      size = view.getUint32(o+8,false)*4294967296 + view.getUint32(o+12,false);
-      hl = 16;
-    } else if (size === 0) {
-      size = end - o;
-    }
+    if (size === 1) { if(o+16>end) break; size=view.getUint32(o+8,false)*4294967296+view.getUint32(o+12,false); hl=16; }
+    else if (size === 0) { size = end - o; }
     if (size < 8 || o+size > end) break;
     out.push({o, size, type, hl, end: o+size});
     o += size;
@@ -156,228 +176,291 @@ function parseBoxes(buf, start, end) {
   return out;
 }
 
-// ─── Recursive deep scanner ───────────────────────────────────────────────────
-// All containers we can recurse into
-const ALL_CONTAINERS = new Set([
-  'moov','trak','mdia','minf','stbl','dinf','edts','mvex',
-  'moof','traf','mfra','clip','udta','ilst'
-]);
-
-const ITUNES_TAGS = {
-  '\u00a9nam':'Title','\u00a9ART':'Artist','\u00a9alb':'Album',
-  '\u00a9cmt':'Comment','\u00a9des':'Description','\u00a9gen':'Genre',
-  '\u00a9too':'Software / Tool','\u00a9wrt':'Composer','\u00a9day':'Date',
-  '\u00a9lyr':'Lyrics','cprt':'Copyright','aART':'Album Artist',
-  'desc':'Description','ldes':'Long Description','purl':'Podcast URL',
-  'tvsh':'TV Show','tven':'TV Episode','keyw':'Keywords',
-  'apID':'Apple ID','ownr':'Owner','purd':'Purchase Date',
-};
-
-// Known AI / C2PA UUIDs (hex, no dashes)
-const KNOWN_UUID = {
-  'be7acfcb97a942e89c71999491e3afac': 'XMP Metadata',
-  'd8fec3d61d234b06a797f68ac9058022': 'C2PA Content Credentials (AI provenance)',
-  'c2pa000000000000000000000000c2pa': 'C2PA Content Credentials (AI provenance)',
-};
-
-function decodeText(buf, offset, len) {
-  try {
-    return new TextDecoder('utf-8',{fatal:false})
-      .decode(new Uint8Array(buf, offset, len))
-      .replace(/\0/g,'').trim();
-  } catch(e) { return ''; }
-}
-
-// Read the actual value from an iTunes-style data box
-function readDataBox(buf, parentStart, parentEnd) {
-  const boxes = parseBoxes(buf, parentStart, parentEnd);
-  const db = boxes.find(b => b.type === 'data');
-  if (!db || db.size <= 16) return null;
-  const vo = db.o + db.hl + 8; // skip 4-byte type indicator + 4-byte locale
-  const vl = db.end - vo;
-  if (vl <= 0) return null;
-  return decodeText(buf, vo, vl) || null;
-}
-
-// Deep recursive scan - returns array of {key, value, isAI}
-function deepScan(buf, start, end, path, results) {
-  const view = new DataView(buf);
-  const boxes = parseBoxes(buf, start, end);
-
-  for (const b of boxes) {
-    const bpath = path + '/' + b.type;
-
-    // ── iTunes ilst items ─────────────────────────────────────────────────
-    if (path.endsWith('/ilst')) {
-      const label = ITUNES_TAGS[b.type] || b.type;
-      const val = readDataBox(buf, b.o + b.hl, b.end);
-      if (val) {
-        const isAI = b.type === '\u00a9too' || b.type === 'desc' || b.type === '\u00a9des' || b.type === '\u00a9cmt';
-        results.push({key: label, value: val, isAI, path: bpath});
-      }
-      continue;
-    }
-
-    // ── uuid boxes ────────────────────────────────────────────────────────
-    if (b.type === 'uuid' && b.size >= 24) {
-      // Read 16-byte UUID
-      const uuidArr = Array.from({length:16},(_,i)=>view.getUint8(b.o+b.hl+i).toString(16).padStart(2,'0'));
-      const uuid = uuidArr.join('');
-      // Format UUID for display: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-      const uuidFmt = [uuidArr.slice(0,4),uuidArr.slice(4,6),uuidArr.slice(6,8),uuidArr.slice(8,10),uuidArr.slice(10,16)].map(g=>g.join('')).join('-');
-
-      // Match known UUIDs
-      let label = KNOWN_UUID[uuid];
-      if (!label) {
-        for (const [k,v] of Object.entries(KNOWN_UUID)) {
-          if (uuid.startsWith(k.substring(0,8))) { label = v; break; }
-        }
-      }
-
-      // Detect C2PA via JUMBF binary signature:
-      // After 16 UUID bytes, C2PA content starts with a JUMBF box whose type is 'jumb'
-      if (!label && b.size > 32) {
-        const jumbOffset = b.o + b.hl + 16; // skip header + UUID
-        if (jumbOffset + 8 <= b.end) {
-          const innerType = r4(view, jumbOffset + 4);
-          if (innerType === 'jumb') {
-            label = 'C2PA Content Credentials — AI provenance (JUMBF)';
-          }
-        }
-      }
-
-      // Detect XMP via text signature in content
-      if (!label && b.size > 32) {
-        const sample = decodeText(buf, b.o+b.hl+16, Math.min(300, b.size-b.hl-16));
-        if (sample.includes('<?xpacket') || sample.includes('<x:xmpmeta') || sample.includes('http://ns.adobe.com/xap')) {
-          label = 'XMP Metadata';
-        }
-      }
-
-      if (!label) label = 'UUID Extension (non-standard metadata)';
-
-      results.push({key: label, value: `UUID: ${uuidFmt} · ${b.size} bytes`, isAI: true, path: bpath});
-    }
-
-    // ── c2pa box type ─────────────────────────────────────────────────────
-    if (b.type === 'c2pa' || b.type === 'c2as') {
-      results.push({key: 'C2PA Content Credentials', value: `${b.size} bytes (AI provenance block)`, isAI: true, path: bpath});
-    }
-
-    // ── XMP box types ─────────────────────────────────────────────────────
-    if (b.type === 'XMP_' || b.type === 'XMPM' || b.type === 'xml ') {
-      const raw = decodeText(buf, b.o+b.hl, Math.min(300, b.size-b.hl));
-      results.push({key: 'XMP Metadata (' + b.type.trim() + ')', value: raw.substring(0,100) || `${b.size} bytes`, isAI: true, path: bpath});
-    }
-
-    // ── Scan any box content for known AI strings ─────────────────────────
-    if (b.size > 20 && b.size < 500000 && !ALL_CONTAINERS.has(b.type) && b.type !== 'mdat') {
-      const sample = decodeText(buf, b.o+b.hl, Math.min(512, b.size-b.hl));
-      if (sample.length > 3) {
-        // Look for XMP
-        if (sample.includes('<?xpacket') || sample.includes('<x:xmpmeta') || sample.includes('http://ns.adobe.com/xap')) {
-          if (!results.find(r => r.key === 'XMP Metadata')) {
-            results.push({key: 'XMP Metadata (' + b.type + ')', value: sample.substring(0,120), isAI: true, path: bpath});
-          }
-        }
-        // Look for C2PA
-        if (sample.includes('c2pa') || sample.includes('C2PA') || sample.includes('contentcredentials')) {
-          if (!results.find(r => r.key.startsWith('C2PA'))) {
-            results.push({key: 'C2PA / Content Credentials (' + b.type + ')', value: sample.substring(0,120), isAI: true, path: bpath});
-          }
-        }
-        // Look for AI tool names
-        const aiTools = ['Veo','Gemini','Sora','Runway','Pika','Kling','HeyGen','Synthesia','Luma','Dream Machine','Stable Video','Gen-2','Gen-3'];
-        for (const tool of aiTools) {
-          if (sample.includes(tool)) {
-            if (!results.find(r => r.value && r.value.includes(tool))) {
-              results.push({key: 'AI Tool Reference (' + b.type + ')', value: tool + ' detected in ' + b.type, isAI: true, path: bpath});
-            }
-          }
-        }
-        // General readable string tags in udta children
-        if (path.includes('/udta') && b.type !== 'meta' && sample.length > 1 && /[\x20-\x7E]{3,}/.test(sample)) {
-          const label = ITUNES_TAGS[b.type] || b.type;
-          if (!results.find(r => r.key === label)) {
-            results.push({key: label, value: sample.substring(0,120), isAI: false, path: bpath});
-          }
-        }
-      }
-    }
-
-    // ── Recurse into containers ───────────────────────────────────────────
-    if (ALL_CONTAINERS.has(b.type)) {
-      const childStart = b.o + b.hl + (b.type === 'meta' ? 4 : 0);
-      deepScan(buf, childStart, b.end, bpath, results);
-    }
-  }
-}
-
-function scanFile(buf) {
-  const results = [];
-  // Scan top-level
-  deepScan(buf, 0, buf.byteLength, '', results);
-
-  // Also check ftyp for brand info
-  const view = new DataView(buf);
-  if (buf.byteLength >= 12) {
-    const firstType = r4(view, 4);
-    if (firstType === 'ftyp') {
-      const brand = r4(view, 8).trim();
-      if (brand && brand !== 'mp42' && brand !== 'isom' && brand !== 'avc1') {
-        results.unshift({key: 'Format Brand', value: brand, isAI: false, path: '/ftyp'});
-      }
-    }
-  }
-  return results;
-}
-
-// ─── Strip Engine ─────────────────────────────────────────────────────────────
 const STRIP_CONTAINERS = new Set(['moov','trak','mdia','minf','stbl','dinf','edts','mvex','moof','traf','mfra','clip']);
-const STRIP_TYPES = new Set(['udta','uuid','c2pa','c2as','XMP_','XMPM','xml ','skip','free','wide']);
+const STRIP_TYPES      = new Set(['udta','uuid','c2pa','c2as','XMP_','XMPM','xml ']);
+const ALL_CONTAINERS   = new Set([...STRIP_CONTAINERS,'udta','ilst']);
 
 function stripBoxes(buf, start, end) {
   const boxes = parseBoxes(buf, start, end);
-  const chunks = [];
-  const removed = [];
+  const chunks = [], removed = [];
   for (const b of boxes) {
     if (STRIP_TYPES.has(b.type)) {
-      if (b.type === 'uuid') removed.push('uuid (XMP/C2PA/AI provenance)');
-      else if (b.type === 'udta') removed.push('udta (user metadata)');
-      else if (b.type === 'c2pa' || b.type === 'c2as') removed.push('c2pa (Content Credentials)');
-      else if (['XMP_','XMPM','xml '].includes(b.type)) removed.push(b.type.trim() + ' (XMP)');
-      // skip — don't include
+      const label = b.type==='uuid'?'uuid (C2PA/XMP/AI)':b.type==='udta'?'udta (user metadata)':b.type+' (metadata)';
+      removed.push(label);
     } else if (STRIP_CONTAINERS.has(b.type)) {
-      const [kids, kRemoved] = stripBoxes(buf, b.o+b.hl, b.end);
-      removed.push(...kRemoved);
+      const [kids, kr] = stripBoxes(buf, b.o+b.hl, b.end);
+      removed.push(...kr);
       const kSize = kids.reduce((s,c)=>s+c.byteLength,0);
       const newSize = b.hl + kSize;
       const hdr = new Uint8Array(b.hl);
       const hv = new DataView(hdr.buffer);
-      if (b.hl === 8) { hv.setUint32(0, newSize, false); }
+      if (b.hl===8) hv.setUint32(0,newSize,false);
       else { hv.setUint32(0,1,false); hv.setUint32(8,Math.floor(newSize/4294967296),false); hv.setUint32(12,newSize>>>0,false); }
-      hdr[4]=b.type.charCodeAt(0); hdr[5]=b.type.charCodeAt(1);
-      hdr[6]=b.type.charCodeAt(2); hdr[7]=b.type.charCodeAt(3);
-      chunks.push(hdr.buffer, ...kids);
+      hdr[4]=b.type.charCodeAt(0);hdr[5]=b.type.charCodeAt(1);hdr[6]=b.type.charCodeAt(2);hdr[7]=b.type.charCodeAt(3);
+      chunks.push(hdr.buffer,...kids);
     } else {
-      chunks.push(buf.slice(b.o, b.end));
+      chunks.push(buf.slice(b.o,b.end));
     }
   }
   return [chunks, removed];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function fmtBytes(b) {
-  if(b<1024) return b+' B';
-  if(b<1048576) return (b/1024).toFixed(1)+' KB';
-  return (b/1048576).toFixed(1)+' MB';
+// ─── CRITICAL: Fix stco/co64 chunk offsets after mdat moves ─────────────────
+function findTopBoxOffset(buf, type) {
+  const boxes = parseBoxes(buf, 0, buf.byteLength);
+  const b = boxes.find(b => b.type === type);
+  return b ? b.o : null;
 }
 
-function isMP4(buf) {
-  if(buf.byteLength<8) return false;
-  const t = r4(new DataView(buf),4);
-  return ['ftyp','moov','mdat','wide','free'].includes(t);
+function fixChunkOffsets(buf, delta) {
+  if (delta === 0) return;
+  fixOffsetRange(new DataView(buf), buf, 0, buf.byteLength, delta);
 }
+
+function fixOffsetRange(view, buf, start, end, delta) {
+  const boxes = parseBoxes(buf, start, end);
+  for (const b of boxes) {
+    if (b.type === 'stco') {
+      // FullBox: 4 bytes version+flags, 4 bytes entry count
+      const count = view.getUint32(b.o+b.hl+4, false);
+      for (let i = 0; i < count; i++) {
+        const off = b.o+b.hl+8+i*4;
+        view.setUint32(off, view.getUint32(off,false)+delta, false);
+      }
+    } else if (b.type === 'co64') {
+      const count = view.getUint32(b.o+b.hl+4, false);
+      for (let i = 0; i < count; i++) {
+        const off = b.o+b.hl+8+i*8;
+        const hi = view.getUint32(off,false);
+        const lo = view.getUint32(off+4,false);
+        const orig = hi*4294967296+lo;
+        const fixed = orig+delta;
+        view.setUint32(off, Math.floor(fixed/4294967296), false);
+        view.setUint32(off+4, fixed>>>0, false);
+      }
+    } else if (ALL_CONTAINERS.has(b.type)) {
+      const cs = b.o+b.hl+(b.type==='meta'?4:0);
+      fixOffsetRange(view, buf, cs, b.end, delta);
+    }
+  }
+}
+
+function assembleAndFixVideo(originalBuf, chunks, removed) {
+  // 1. Assemble output buffer
+  const totalSize = chunks.reduce((s,c)=>s+c.byteLength,0);
+  const outBuf = new ArrayBuffer(totalSize);
+  const outU8 = new Uint8Array(outBuf);
+  let pos = 0;
+  for (const c of chunks) { outU8.set(new Uint8Array(c),pos); pos+=c.byteLength; }
+
+  // 2. Fix chunk offsets if mdat moved
+  const origMdat = findTopBoxOffset(originalBuf,'mdat');
+  const newMdat  = findTopBoxOffset(outBuf,'mdat');
+  if (origMdat !== null && newMdat !== null) {
+    const delta = newMdat - origMdat;
+    if (delta !== 0) fixChunkOffsets(outBuf, delta);
+  }
+
+  return { buf: outBuf, removed };
+}
+
+// ─── Video scanner ────────────────────────────────────────────────────────────
+const ITUNES_TAGS = {
+  '\u00a9nam':'Title','\u00a9ART':'Artist','\u00a9alb':'Album','\u00a9cmt':'Comment',
+  '\u00a9des':'Description','\u00a9gen':'Genre','\u00a9too':'Software/Tool',
+  '\u00a9wrt':'Composer','\u00a9day':'Date','\u00a9lyr':'Lyrics',
+  'cprt':'Copyright','aART':'Album Artist','desc':'Description',
+  'ldes':'Long Description','purl':'Podcast URL','tvsh':'TV Show','keyw':'Keywords',
+};
+const KNOWN_UUID = {
+  'be7acfcb97a942e89c71999491e3afac':'XMP Metadata',
+  'd8fec3d61d234b06a797f68ac9058022':'C2PA Content Credentials (AI provenance)',
+};
+function decodeText(buf,offset,len){
+  try{return new TextDecoder('utf-8',{fatal:false}).decode(new Uint8Array(buf,offset,len)).replace(/\0/g,'').trim();}catch{return '';}
+}
+function readDataBox(buf,s,e){
+  const db=parseBoxes(buf,s,e).find(b=>b.type==='data');
+  if(!db||db.size<=16)return null;
+  const vo=db.o+db.hl+8,vl=db.end-vo;
+  return vl>0?decodeText(buf,vo,vl)||null:null;
+}
+function deepScan(buf,start,end,path,results){
+  const view=new DataView(buf);
+  const boxes=parseBoxes(buf,start,end);
+  for(const b of boxes){
+    const bp=path+'/'+b.type;
+    if(path.endsWith('/ilst')){
+      const label=ITUNES_TAGS[b.type]||b.type;
+      const val=readDataBox(buf,b.o+b.hl,b.end);
+      if(val){const isAI=b.type==='\u00a9too'||b.type==='\u00a9cmt'||b.type==='\u00a9des'||b.type==='desc';results.push({key:label,value:val,isAI,path:bp});}
+      continue;
+    }
+    if(b.type==='uuid'&&b.size>=24){
+      const ua=Array.from({length:16},(_,i)=>view.getUint8(b.o+b.hl+i).toString(16).padStart(2,'0'));
+      const uuid=ua.join('');
+      const uuidFmt=[ua.slice(0,4),ua.slice(4,6),ua.slice(6,8),ua.slice(8,10),ua.slice(10,16)].map(g=>g.join('')).join('-');
+      let label=KNOWN_UUID[uuid];
+      if(!label){for(const[k,v]of Object.entries(KNOWN_UUID))if(uuid.startsWith(k.slice(0,8))){label=v;break;}}
+      // JUMBF binary detection
+      if(!label&&b.size>32){const jo=b.o+b.hl+16;if(jo+8<=b.end&&r4(view,jo+4)==='jumb')label='C2PA Content Credentials — AI provenance (JUMBF)';}
+      // XMP text detection
+      if(!label&&b.size>32){const s2=decodeText(buf,b.o+b.hl+16,Math.min(200,b.size-b.hl-16));if(s2.includes('<?xpacket')||s2.includes('<x:xmpmeta'))label='XMP Metadata';}
+      if(!label)label='UUID Extension';
+      results.push({key:label,value:`UUID: ${uuidFmt} · ${b.size} bytes`,isAI:true,path:bp});
+    }
+    if(b.type==='c2pa'||b.type==='c2as')results.push({key:'C2PA Content Credentials',value:`${b.size} bytes`,isAI:true,path:bp});
+    if(b.type==='XMP_'||b.type==='XMPM'||b.type==='xml ')results.push({key:'XMP Metadata ('+b.type.trim()+')',value:decodeText(buf,b.o+b.hl,Math.min(100,b.size-b.hl))||`${b.size} bytes`,isAI:true,path:bp});
+    if(b.size>20&&b.size<200000&&!ALL_CONTAINERS.has(b.type)&&b.type!=='mdat'){
+      const s2=decodeText(buf,b.o+b.hl,Math.min(300,b.size-b.hl));
+      if(s2.includes('<?xpacket')||s2.includes('<x:xmpmeta'))results.push({key:'XMP in '+b.type,value:s2.slice(0,80),isAI:true,path:bp});
+      if(s2.includes('c2pa')||s2.includes('C2PA'))if(!results.find(r=>r.key.startsWith('C2PA')))results.push({key:'C2PA reference in '+b.type,value:s2.slice(0,80),isAI:true,path:bp});
+      const aiTools=['Veo','Gemini','Sora','Runway','Pika','Kling','Synthesia','Luma','HeyGen'];
+      for(const t of aiTools)if(s2.includes(t)&&!results.find(r=>r.value&&r.value.includes(t)))results.push({key:'AI Tool ('+b.type+')',value:t+' reference found',isAI:true,path:bp});
+      if(path.includes('/udta')&&b.type!=='meta'&&s2.length>1){const l=ITUNES_TAGS[b.type]||b.type;if(!results.find(r=>r.key===l))results.push({key:l,value:s2.slice(0,100),isAI:false,path:bp});}
+    }
+    if(ALL_CONTAINERS.has(b.type)){deepScan(buf,b.o+b.hl+(b.type==='meta'?4:0),b.end,bp,results);}
+  }
+}
+function scanVideo(buf){
+  const results=[];
+  deepScan(buf,0,buf.byteLength,'',results);
+  return results;
+}
+
+// ─── MP3 ID3 Tag Engine ───────────────────────────────────────────────────────
+function readSyncsafeInt(u8, off) {
+  return ((u8[off]&0x7f)<<21)|((u8[off+1]&0x7f)<<14)|((u8[off+2]&0x7f)<<7)|(u8[off+3]&0x7f);
+}
+function id3v2Size(u8) {
+  if(u8[0]!==0x49||u8[1]!==0x44||u8[2]!==0x33) return 0;
+  const flags=u8[5], hasFooter=(flags&0x10)!==0;
+  const size=readSyncsafeInt(u8,6);
+  return 10+size+(hasFooter?10:0);
+}
+function hasId3v1(u8) {
+  const e=u8.length;
+  return e>=128&&u8[e-128]===0x54&&u8[e-127]===0x41&&u8[e-126]===0x47;
+}
+
+function scanMP3(buf) {
+  const u8=new Uint8Array(buf), results=[];
+  const v2size=id3v2Size(u8);
+  if(v2size>0){
+    results.push({key:'ID3v2 Tag Block',value:`${v2size} bytes — contains all track metadata`,isAI:false,path:'/id3v2'});
+    // Peek inside frames
+    let o=10;
+    while(o+10<=v2size&&o+10<=u8.length){
+      const fid=String.fromCharCode(u8[o],u8[o+1],u8[o+2],u8[o+3]);
+      if(fid==='\0\0\0\0') break;
+      let fsize=((u8[o+4]<<24)|(u8[o+5]<<16)|(u8[o+6]<<8)|u8[o+7])>>>0;
+      if(fsize===0||o+10+fsize>v2size) break;
+      const FRAME_NAMES={TITS:'Title',TIT2:'Title',TPE1:'Artist',TALB:'Album',TCON:'Genre',TYER:'Year',TDRC:'Date',COMM:'Comment',TCOP:'Copyright',TENC:'Encoded by',TSSE:'Encoding Software',TSRC:'ISRC',TLEN:'Length',TPOS:'Disc',TRCK:'Track'};
+      const label=FRAME_NAMES[fid]||fid;
+      if(fsize<500&&fid.startsWith('T')){
+        try{
+          const enc=u8[o+10];
+          let text='';
+          if(enc===0||enc===3){text=new TextDecoder(enc===3?'utf-8':'latin1').decode(u8.slice(o+11,o+10+fsize));}
+          else if(enc===1||enc===2){text=new TextDecoder(enc===1?'utf-16':'utf-16be').decode(u8.slice(o+11,o+10+fsize));}
+          text=text.replace(/\0/g,'').trim();
+          if(text)results.push({key:label,value:text,isAI:fid==='TSSE'||fid==='TENC',path:'/id3v2/'+fid});
+        }catch{}
+      }
+      o+=10+fsize;
+    }
+  }
+  if(hasId3v1(u8)){
+    const e=u8.length;
+    const dec=new TextDecoder('latin1');
+    results.push({key:'ID3v1 Tag',value:'Title: '+dec.decode(u8.slice(e-125,e-95)).replace(/\0/g,'').trim(),isAI:false,path:'/id3v1'});
+  }
+  return results;
+}
+
+function stripMP3(buf) {
+  const u8=new Uint8Array(buf);
+  let start=id3v2Size(u8), end=buf.byteLength;
+  if(hasId3v1(u8)) end-=128;
+  return buf.slice(start,end);
+}
+
+// ─── WAV Engine ───────────────────────────────────────────────────────────────
+function isWAV(buf) {
+  if(buf.byteLength<12) return false;
+  const v=new DataView(buf);
+  return r4(v,0)==='RIFF'&&r4(v,8)==='WAVE';
+}
+function scanWAV(buf) {
+  const view=new DataView(buf),results=[];
+  let o=12;
+  while(o+8<=buf.byteLength){
+    const id=r4(view,o);
+    const size=view.getUint32(o+4,true);
+    if(id==='LIST'){
+      const ltype=r4(view,o+8);
+      if(ltype==='INFO'){
+        results.push({key:'RIFF INFO chunk',value:`${size} bytes — contains artist/title/metadata`,isAI:false,path:'/LIST/INFO'});
+        let io=o+12;
+        while(io+8<=o+8+size){
+          const iid=r4(view,io);
+          const isz=view.getUint32(io+4,true);
+          if(isz>0&&isz<500){
+            const txt=new TextDecoder('latin1').decode(new Uint8Array(buf,io+8,isz)).replace(/\0/g,'').trim();
+            if(txt)results.push({key:iid,value:txt,isAI:false,path:'/LIST/INFO/'+iid});
+          }
+          io+=8+isz+(isz%2);
+        }
+      }
+    }
+    o+=8+size+(size%2);
+  }
+  return results;
+}
+function stripWAV(buf) {
+  const view=new DataView(buf);
+  const chunks=[];
+  chunks.push(buf.slice(0,12)); // RIFF header
+  let o=12, totalData=12;
+  while(o+8<=buf.byteLength){
+    const id=r4(view,o);
+    const size=view.getUint32(o+4,true);
+    const skip=(id==='LIST'&&o+12<=buf.byteLength&&r4(view,o+8)==='INFO');
+    if(!skip){chunks.push(buf.slice(o,o+8+size+(size%2)));totalData+=8+size+(size%2);}
+    o+=8+size+(size%2);
+  }
+  // Fix RIFF chunk size
+  const outBuf=new ArrayBuffer(totalData);
+  const outU8=new Uint8Array(outBuf), outV=new DataView(outBuf);
+  let pos=0;for(const c of chunks){outU8.set(new Uint8Array(c),pos);pos+=c.byteLength;}
+  outV.setUint32(4,totalData-8,true);
+  return outBuf;
+}
+
+// ─── File type detection ──────────────────────────────────────────────────────
+function isMP4(buf){
+  if(buf.byteLength<8)return false;
+  const t=r4(new DataView(buf),4);
+  return['ftyp','moov','mdat','wide','free'].includes(t);
+}
+function isMP3(buf){
+  const u=new Uint8Array(buf);
+  if(u[0]===0x49&&u[1]===0x44&&u[2]===0x33)return true; // ID3 header
+  if((u[0]===0xff)&&((u[1]&0xe0)===0xe0))return true; // MPEG sync
+  return false;
+}
+function getFileType(file,buf){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(['mp4','mov','m4v'].includes(ext)||isMP4(buf))return 'mp4';
+  if(['m4a','aac'].includes(ext)&&isMP4(buf))return 'mp4';
+  if(ext==='mp3'||isMP3(buf))return 'mp3';
+  if(ext==='wav'||isWAV(buf))return 'wav';
+  return 'unknown';
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function fmtBytes(b){if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB';}
+function setButtons(d){document.getElementById('scanBtn').disabled=d;document.getElementById('stripBtn').disabled=d;}
 
 // ─── UI ───────────────────────────────────────────────────────────────────────
 const drop=document.getElementById('drop');
@@ -385,6 +468,7 @@ const filePick=document.getElementById('filePick');
 const fileCard=document.getElementById('fileCard');
 const fName=document.getElementById('fName');
 const fSize=document.getElementById('fSize');
+const fileIcon=document.getElementById('fileIcon');
 const clearBtn=document.getElementById('clearBtn');
 const actionRow=document.getElementById('actionRow');
 const scanBtn=document.getElementById('scanBtn');
@@ -396,116 +480,125 @@ const scanProg=document.getElementById('scanProg');
 const resCard=document.getElementById('resCard');
 const resMsg=document.getElementById('resMsg');
 const dlLink=document.getElementById('dlLink');
-const synthNote=document.getElementById('synthNote');
+const warnBox=document.getElementById('warnBox');
 
-let selFile=null, outUrl=null, fileBuf=null;
-
-function handleFile(file) {
-  if(!file) return;
-  selFile=file; fileBuf=null;
+function clearFile(){
+  selFile=fileBuf=null;filePick.value='';
+  fileCard.className=metaCard.className='card';
+  resCard.className='res';warnBox.className='warn-box';
+  actionRow.style.display='none';
+  if(outUrl){URL.revokeObjectURL(outUrl);outUrl=null;}
+}
+function handleFile(file){
+  if(!file)return;
+  selFile=file;fileBuf=null;
   fName.textContent=file.name;
   fSize.textContent=fmtBytes(file.size);
+  const isAud=file.type.startsWith('audio/')||['mp3','m4a','aac','wav','ogg','flac'].includes(file.name.split('.').pop().toLowerCase());
+  fileIcon.textContent=isAud?'🎵':'🎞️';
   fileCard.className='card on';
   actionRow.style.display='flex';
   metaCard.className='card';
   resCard.className='res';
-  synthNote.className='synth-note';
+  warnBox.className='warn-box';
   if(outUrl){URL.revokeObjectURL(outUrl);outUrl=null;}
 }
-
 filePick.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
 drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over');});
 drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
 drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
-clearBtn.addEventListener('click',()=>{
-  selFile=fileBuf=null;filePick.value='';
-  fileCard.className=metaCard.className='card';
-  resCard.className='res';synthNote.className='synth-note';
-  actionRow.style.display='none';
-  if(outUrl){URL.revokeObjectURL(outUrl);outUrl=null;}
-});
+clearBtn.addEventListener('click',clearFile);
 
-async function readBuf() {
-  if(fileBuf) return fileBuf;
-  return new Promise((res,rej)=>{
-    const fr=new FileReader();
-    fr.onload=e=>{fileBuf=e.target.result;res(fileBuf);};
-    fr.onerror=rej;
-    fr.readAsArrayBuffer(selFile);
-  });
+async function readBuf(){
+  if(fileBuf)return fileBuf;
+  return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>{fileBuf=e.target.result;res(fileBuf);};fr.onerror=rej;fr.readAsArrayBuffer(selFile);});
 }
 
-scanBtn.addEventListener('click', async()=>{
-  if(!selFile) return;
-  scanBtn.disabled=stripBtn.disabled=true;
+function renderResults(results){
+  if(results.length===0){
+    metaBody.innerHTML='<div class="nomsg">🎉 No metadata found — already clean!</div>';
+    tagCount.textContent='Clean';tagCount.className='tc good';return;
+  }
+  const aiCount=results.filter(r=>r.isAI).length;
+  tagCount.textContent=results.length+' tag'+(results.length>1?'s':'')+(aiCount?' ('+aiCount+' AI)':'');
+  tagCount.className=aiCount>0?'tc bad':'tc warn';
+  const t=document.createElement('table');t.className='mt';
+  for(const r of results){
+    const tr=document.createElement('tr');
+    if(r.isAI)tr.className='ai-row';
+    tr.innerHTML=`<td>${r.isAI?'🚨 ':''}<b>${r.key}</b></td><td>${r.value}</td>`;
+    t.appendChild(tr);
+  }
+  metaBody.innerHTML='';metaBody.appendChild(t);
+}
+
+scanBtn.addEventListener('click',async()=>{
+  if(!selFile)return;
+  setButtons(true);
   scanProg.style.width='20%';
-  metaBody.innerHTML='';
-  metaCard.className='card on';
-  resCard.className='res';
-  synthNote.className='synth-note';
-  try {
+  metaBody.innerHTML='';metaCard.className='card on';resCard.className='res';warnBox.className='warn-box';
+  try{
     const buf=await readBuf();
     scanProg.style.width='70%';
-    if(!isMP4(buf)){
-      metaBody.innerHTML='<div class="nomsg" style="color:var(--muted)">⚠️ Cannot read this format.<br>Only MP4/MOV/M4V supported.</div>';
-      tagCount.textContent='?';tagCount.className='tc warn';
-      scanProg.style.width='100%';return;
-    }
-    const results=scanFile(buf);
+    const ft=getFileType(selFile,buf);
+    let results=[];
+    if(ft==='mp4')results=scanVideo(buf);
+    else if(ft==='mp3')results=scanMP3(buf);
+    else if(ft==='wav')results=scanWAV(buf);
+    else{metaBody.innerHTML='<div class="nomsg" style="color:var(--muted)">⚠️ Format not fully supported for scanning.<br>Try Strip &amp; Save anyway.</div>';tagCount.textContent='?';tagCount.className='tc warn';scanProg.style.width='100%';return;}
+    renderResults(results);
     scanProg.style.width='100%';
-    const aiResults=results.filter(r=>r.isAI);
-    const allResults=results;
-    if(allResults.length===0){
-      metaBody.innerHTML='<div class="nomsg">🎉 No metadata found — already clean!</div>';
-      tagCount.textContent='Clean';tagCount.className='tc good';
-    } else {
-      tagCount.textContent=allResults.length+' tag'+(allResults.length>1?'s':'')+
-        (aiResults.length>0?' ('+aiResults.length+' AI)':'');
-      tagCount.className=aiResults.length>0?'tc bad':'tc warn';
-      const t=document.createElement('table');
-      t.className='mt';
-      for(const r of allResults){
-        const tr=document.createElement('tr');
-        if(r.isAI) tr.className='ai-row';
-        tr.innerHTML=`<td>${r.isAI?'🚨 ':''}<b>${r.key}</b><br><span style="font-size:.68rem;opacity:.6">${r.path}</span></td><td>${r.value}</td>`;
-        t.appendChild(tr);
-      }
-      metaBody.appendChild(t);
-      // Show SynthID note if Gemini/Veo detected
-      const isGemini=allResults.some(r=>r.value&&(r.value.includes('Veo')||r.value.includes('Gemini')));
-      const hasC2PA=allResults.some(r=>r.key.startsWith('C2PA')||r.key.includes('Content Credentials'));
-      if(isGemini||hasC2PA) synthNote.className='synth-note on';
-    }
-  } catch(e){
-    metaBody.innerHTML=`<div class="nomsg" style="color:var(--red)">Error: ${e.message}</div>`;
-  } finally {
-    scanBtn.disabled=stripBtn.disabled=false;
-  }
+  }catch(e){metaBody.innerHTML=`<div class="nomsg" style="color:var(--red)">Error: ${e.message}</div>`;}
+  finally{setButtons(false);}
 });
 
-stripBtn.addEventListener('click', async()=>{
-  if(!selFile) return;
-  scanBtn.disabled=stripBtn.disabled=true;
-  resCard.className='res';
-  try {
+stripBtn.addEventListener('click',async()=>{
+  if(!selFile)return;
+  setButtons(true);
+  resCard.className='res';warnBox.className='warn-box';
+  try{
     const buf=await readBuf();
-    if(!isMP4(buf)){alert('Only MP4, MOV, and M4V files are supported.');return;}
-    const [chunks,removed]=stripBoxes(buf,0,buf.byteLength);
-    const blob=new Blob(chunks,{type:selFile.type||'video/mp4'});
-    if(outUrl) URL.revokeObjectURL(outUrl);
+    const ft=getFileType(selFile,buf);
+    let outBuf, removed=[], mime=selFile.type||'application/octet-stream';
+
+    if(ft==='mp4'){
+      const [chunks,rem]=stripBoxes(buf,0,buf.byteLength);
+      removed=rem;
+      const result=assembleAndFixVideo(buf,chunks,rem);
+      outBuf=result.buf;
+      mime=selFile.type||'video/mp4';
+    } else if(ft==='mp3'){
+      outBuf=stripMP3(buf);
+      removed=['ID3v2 tags','ID3v1 tags'];
+      mime='audio/mpeg';
+    } else if(ft==='wav'){
+      outBuf=stripWAV(buf);
+      removed=['RIFF INFO metadata chunk'];
+      mime='audio/wav';
+    } else {
+      warnBox.innerHTML='⚠️ <b>Format not supported for stripping.</b> Supported: MP4, MOV, M4V, MP3, M4A, WAV.';
+      warnBox.className='warn-box on';return;
+    }
+
+    const blob=new Blob([outBuf],{type:mime});
+    if(outUrl)URL.revokeObjectURL(outUrl);
     outUrl=URL.createObjectURL(blob);
-    const cleanName=selFile.name.replace(/(\.\w+)$/,'_clean$1');
-    dlLink.href=outUrl;dlLink.download=cleanName;
+    const ext=selFile.name.split('.').pop();
+    dlLink.href=outUrl;dlLink.download=selFile.name.replace(/(\.\w+)$/,'_clean$1');
     const saved=selFile.size-blob.size;
     const uniq=[...new Set(removed)];
     resMsg.textContent=uniq.length>0
-      ?`Removed: ${uniq.join(', ')}. Saved ${fmtBytes(saved)}. Clean file: ${fmtBytes(blob.size)}`
-      :`No removable metadata found. File size: ${fmtBytes(blob.size)}`;
+      ?`Removed: ${uniq.join(', ')}. Saved ${fmtBytes(Math.max(0,saved))}. Clean: ${fmtBytes(blob.size)}`
+      :`No removable metadata found. File: ${fmtBytes(blob.size)}`;
     resCard.className='res on';
-    // Show SynthID note after stripping Gemini content
-    synthNote.className='synth-note on';
-  } catch(e){alert('Error: '+e.message);}
-  finally{scanBtn.disabled=stripBtn.disabled=false;}
+
+    // TikTok note for audio
+    if(ft==='mp3'||mime.includes('audio')){
+      warnBox.innerHTML='ℹ️ <b>About TikTok audio detection:</b> Metadata tags have been stripped. However, if TikTok flagged the audio for <b>AI-generated voice detection</b>, that\'s based on the audio waveform itself — no metadata change can bypass acoustic AI detection.';
+      warnBox.className='warn-box on';
+    }
+  }catch(e){alert('Error: '+e.message);}
+  finally{setButtons(false);}
 });
 </script>
 </body>
